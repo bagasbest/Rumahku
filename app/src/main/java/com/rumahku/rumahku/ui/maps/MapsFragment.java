@@ -1,15 +1,24 @@
 package com.rumahku.rumahku.ui.maps;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -24,13 +33,20 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.rumahku.rumahku.R;
 import com.rumahku.rumahku.databinding.FragmentMapsBinding;
+import com.rumahku.rumahku.ui.home.HomeDetail;
+import com.rumahku.rumahku.ui.home.HomeModel;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
@@ -98,8 +114,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(@NonNull @NotNull GoogleMap googleMap) {
+
         LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Posisi Anda Saat Ini");
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Hai, Ini merupakan lokasi kamu");
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
         googleMap.addMarker(markerOptions);
@@ -125,6 +142,98 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         LatLng cikarangBaru = new LatLng(-6.279681,107.166570);
         googleMap.addMarker(new MarkerOptions().position(cikarangBaru).title("CIKARANG BARU").snippet("Jl. Kedasih Raya, Jababeka, kabupaten bekasi"));
 
+
+        googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(@NonNull @NotNull Marker marker) {
+                return null;
+            }
+
+            @SuppressLint("SetTextI18n")
+            @Override
+            public View getInfoContents(@NonNull @NotNull Marker marker) {
+                LinearLayout info = new LinearLayout(getContext());
+                info.setOrientation(LinearLayout.VERTICAL);
+
+                TextView title = new TextView(getContext());
+                title.setTextColor(Color.BLACK);
+                title.setGravity(Gravity.LEFT);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setText(marker.getTitle());
+
+                TextView snippet = new TextView(getContext());
+                snippet.setTextColor(Color.GRAY);
+                snippet.setText(marker.getSnippet());
+
+                Button button = new Button(getContext());
+                button.setWidth(200);
+                button.setHeight(50);
+                button.setText("Info Selengkapnya");
+                button.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.primary));
+                button.setAllCaps(false);
+
+                info.addView(title);
+                info.addView(snippet);
+                info.addView(button);
+
+                return info;
+            }
+        });
+
+        googleMap.setOnInfoWindowClickListener(marker -> {
+            if(marker.getTitle().equals("TAMAN SENTOSA")) {
+                getDetailLocation("TAMAN SENTOSA");
+            }
+            else if(marker.getTitle().equals("VILLA MUTIARA CIKARANG")) {
+                getDetailLocation("VILLA MUTIARA CIKARANG");
+            }
+            else if(marker.getTitle().equals("GRAHA ASRI CIKARANG")) {
+                getDetailLocation("GRAHA ASRI CIKARANG");
+            }
+            else if(marker.getTitle().equals("CENTRAL PARK CIKARANG")) {
+                getDetailLocation("CENTRAL PARK CIKARANG");
+            }
+            else if(marker.getTitle().equals("CIKARANG BARU")) {
+                getDetailLocation("CIKARANG BARU");
+            }
+        });
+
+    }
+
+    private void getDetailLocation(String location) {
+        final ArrayList<HomeModel> homeModelArrayList = new ArrayList<>();
+        HomeModel model = new HomeModel();
+
+        FirebaseFirestore
+                .getInstance()
+                .collection("home")
+                .whereEqualTo("title", location)
+                .get()
+                .addOnCompleteListener(task -> {
+                    for(QueryDocumentSnapshot document : task.getResult()) {
+                        List<String> hospitals = (List<String>) document.get("hospital");
+                        model.setHospital(hospitals);
+                        model.setLatlng("" + document.get("latlng"));
+                        model.setLocation("" + document.get("location"));
+                        List<String> recreation = (List<String>) document.get("recreation");
+                        model.setRecreation(recreation);
+                        List<String> school = (List<String>) document.get("school");
+                        model.setSchool(school);
+                        List<String> shopping = (List<String>) document.get("shopping");
+                        model.setShopping(shopping);
+                        model.setTitle("" + document.get("title"));
+
+                        homeModelArrayList.add(model);
+                    }
+
+                    Intent intent = new Intent(getActivity(), HomeDetail.class);
+                    intent.putExtra(HomeDetail.EXTRA_HOME, model);
+                    startActivity(intent);
+
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getActivity(), "Gagal mengambil detail perumahan", Toast.LENGTH_SHORT).show();
+                });
     }
 
     @Override
