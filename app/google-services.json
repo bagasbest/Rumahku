@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "827019139255",
+    "project_id": "rumahku-ab3bc",
+    "storage_bucket": "rumahku-ab3bc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:827019139255:android:69aecfcbe763d0d1f0d532",
+        "android_client_info": {
+          "package_name": "com.rumahku.rumahku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "827019139255-tfkg8h1etffa6v3528jurkd7haa0mu12.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1T-uyuZ8tu5ANU9z_xmP_KLnzTs85A8Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "827019139255-tfkg8h1etffa6v3528jurkd7haa0mu12.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
